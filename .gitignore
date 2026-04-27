@@ -14,5 +14,3 @@ figures/*.pptx
 .vscode/
 .idea/
 
-# Preview PDF
-mmcore_preview.pdf
