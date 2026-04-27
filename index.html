@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MMCORE – MultiModal COnnection with Representation Aligned Latent Embeddings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ───────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #050505;
+      color: #e0e0e0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    /* ── Utilities ──────────────────────────────────── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+    .container-wide { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+    .section { padding: 7rem 0; position: relative; }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section-desc {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: #999;
+      max-width: 720px;
+    }
+
+    /* ── Scroll Reveal ──────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* ── Floating Navbar ────────────────────────────── */
+    .navbar {
+      position: fixed;
+      top: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: rgba(20, 20, 20, 0.7);
+      backdrop-filter: blur(20px) saturate(1.8);
+      -webkit-backdrop-filter: blur(20px) saturate(1.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 100px;
+      padding: 0.5rem 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.3s ease;
+    }
+    .navbar.scrolled {
+      background: rgba(10, 10, 10, 0.9);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    .nav-brand {
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, #a78bfa, #6dd5ed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-link {
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 100px;
+      color: #888;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    .nav-link.active { color: #fff; background: rgba(255,255,255,0.1); }
+
+    /* ── Hero ───────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      padding: 6rem 2rem 4rem;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: -20%;
+      width: 140%;
+      height: 140%;
+      background:
+        radial-gradient(ellipse 600px 400px at 30% 20%, rgba(120, 80, 220, 0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 500px at 70% 60%, rgba(60, 160, 240, 0.1) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 300px at 50% 80%, rgba(80, 200, 180, 0.08) 0%, transparent 70%);
+      animation: heroPulse 12s ease-in-out infinite alternate;
+    }
+    @keyframes heroPulse {
+      0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+      50% { transform: scale(1.05) rotate(1deg); opacity: 1; }
+      100% { transform: scale(1) rotate(-1deg); opacity: 0.8; }
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent);
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 900px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      background: rgba(167, 139, 250, 0.08);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #a78bfa;
+      margin-bottom: 2rem;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #a78bfa;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .hero h1 {
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #a78bfa 0%, #6dd5ed 50%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      line-height: 1.7;
+      color: #888;
+      max-width: 650px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 4rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 100px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #3b82f6);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(124, 58, 237, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 32px rgba(124, 58, 237, 0.45);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: #ccc;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    /* ── Stat Cards ─────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+      transform: translateY(-2px);
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a78bfa, #6dd5ed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Dividers ───────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 50%, transparent);
+      margin: 0;
+    }
+
+    /* ── Abstract Section ──────────────────────────── */
+    .abstract-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    .abstract-text {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: #aaa;
+    }
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .feature-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 1.25rem;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .feature-item:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(167, 139, 250, 0.2);
+    }
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .feature-icon.purple { background: rgba(167, 139, 250, 0.15); }
+    .feature-icon.blue { background: rgba(59, 130, 246, 0.15); }
+    .feature-icon.teal { background: rgba(45, 212, 191, 0.15); }
+    .feature-icon.pink { background: rgba(244, 114, 182, 0.15); }
+    .feature-item h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #ddd;
+      margin-bottom: 0.25rem;
+    }
+    .feature-item p {
+      font-size: 0.82rem;
+      color: #777;
+      line-height: 1.5;
+    }
+
+    /* ── Architecture Section ──────────────────────── */
+    .arch-image-wrap {
+      margin-top: 3rem;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      padding: 2rem;
+    }
+    .arch-image-wrap img {
+      width: 100%;
+      border-radius: 12px;
+    }
+    .arch-placeholder {
+      width: 100%;
+      aspect-ratio: 16/7;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(167,139,250,0.05), rgba(59,130,246,0.05));
+      border: 1px dashed rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    /* ── Benchmark Charts ──────────────────────────── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .chart-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+    .chart-card:hover {
+      border-color: rgba(255,255,255,0.12);
+    }
+    .chart-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #ccc;
+      margin-bottom: 0.25rem;
+    }
+    .chart-card .chart-subtitle {
+      font-size: 0.75rem;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .bar-label {
+      font-size: 0.72rem;
+      color: #888;
+      width: 90px;
+      text-align: right;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bar-track {
+      flex: 1;
+      height: 28px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+    }
+    .bar-fill.animated { width: var(--target-width); }
+    .bar-fill span {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      white-space: nowrap;
+    }
+    .bar-fill.ours {
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.8), rgba(59, 130, 246, 0.8));
+    }
+    .bar-fill.other {
+      background: rgba(255,255,255,0.08);
+    }
+    .bar-fill.other span { color: rgba(255,255,255,0.5); }
+
+    /* ── Gallery Section ───────────────────────────── */
+    .gallery-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .gallery-tab {
+      padding: 0.6rem 1.5rem;
+      border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: transparent;
+      color: #888;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .gallery-tab:hover { color: #ccc; border-color: rgba(255,255,255,0.15); }
+    .gallery-tab.active {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border-color: rgba(255,255,255,0.15);
+    }
+    .gallery-panel { display: none; }
+    .gallery-panel.active { display: block; }
+
+    /* ── Comparison Slider ─────────────────────────── */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .comparison-item {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+    .comparison-slider {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      cursor: col-resize;
+      user-select: none;
+    }
+    .comparison-slider img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .comparison-slider .img-overlay {
+      clip-path: inset(0 50% 0 0);
+      z-index: 2;
+    }
+    .comparison-slider .img-base { z-index: 1; }
+    .comparison-slider .slider-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      background: #fff;
+      z-index: 5;
+      pointer-events: none;
+      box-shadow: 0 0 12px rgba(0,0,0,0.5);
+    }
+    .comparison-slider .slider-handle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      z-index: 6;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    }
+    .comparison-slider .slider-handle::before {
+      content: '⟨  ⟩';
+      font-size: 0.75rem;
+      color: #333;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+    .slider-labels {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      z-index: 4;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    }
+    .slider-labels span {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: rgba(255,255,255,0.85);
+      background: rgba(0,0,0,0.4);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      backdrop-filter: blur(8px);
+    }
+    .edit-prompt-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      margin: 0.75rem 0.75rem 0;
+      font-size: 0.78rem;
+      color: #c4b5fd;
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 8px;
+      line-height: 1.5;
+    }
+    .edit-prompt-badge .edit-tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a78bfa;
+      background: rgba(139,92,246,0.15);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+    .comparison-caption {
+      padding: 1rem 1.25rem;
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.5;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    /* ── Image Grid (T2I) ──────────────────────────── */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .image-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      transition: all 0.4s ease;
+    }
+    .image-card:hover {
+      border-color: rgba(255,255,255,0.12);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .image-card .image-wrap {
+      aspect-ratio: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .image-card:hover img { transform: scale(1.05); }
+    .image-card .image-prompt {
+      padding: 1rem 1.25rem;
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.5;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: #444;
+      position: relative;
+    }
+    .image-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.5;
+    }
+    .ph-1::before { background: linear-gradient(135deg, #1a1025, #0d1b2a); }
+    .ph-2::before { background: linear-gradient(135deg, #0d1b2a, #0a1628); }
+    .ph-3::before { background: linear-gradient(135deg, #0f1922, #0a1628); }
+    .ph-4::before { background: linear-gradient(135deg, #1a0d25, #0d1b2a); }
+    .ph-5::before { background: linear-gradient(135deg, #0d251a, #0a2818); }
+    .ph-6::before { background: linear-gradient(135deg, #25200d, #281a0a); }
+
+    /* ── Multi-Image Editing ───────────────────────── */
+    .multi-edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .multi-edit-card {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      transition: all 0.3s ease;
+    }
+    .multi-edit-card:hover {
+      border-color: rgba(139,92,246,0.25);
+    }
+    .multi-edit-body {
+      padding: 1rem 1.25rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .multi-edit-card.full-width {
+      grid-column: 1 / -1;
+    }
+    .multi-edit-inputs {
+      display: grid;
+      grid-template-columns: repeat(2, 120px);
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .multi-edit-inputs.inputs-5col {
+      grid-template-columns: repeat(5, 90px);
+    }
+    .multi-edit-inputs.inputs-3col {
+      grid-template-columns: repeat(3, 110px);
+    }
+    .multi-edit-inputs .input-thumb {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+      cursor: pointer;
+    }
+    .multi-edit-inputs .input-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .input-thumb-label {
+      position: absolute;
+      bottom: 0.3rem;
+      left: 0.3rem;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(0,0,0,0.55);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      backdrop-filter: blur(4px);
+    }
+    .multi-edit-arrow {
+      font-size: 1.25rem;
+      color: rgba(167,139,250,0.5);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+    .multi-edit-output {
+      flex: 1;
+      min-width: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid rgba(167, 139, 250, 0.2);
+      cursor: pointer;
+    }
+    .multi-edit-output img {
+      width: 100%;
+      display: block;
+    }
+    .full-width .multi-edit-output {
+      max-width: 380px;
+    }
+
+    /* ── BibTeX ─────────────────────────────────────── */
+    .bibtex-wrap {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-top: 2rem;
+    }
+    .bibtex-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .bibtex-header span {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #888;
+    }
+    .bibtex-copy {
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: #888;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .bibtex-copy:hover {
+      background: rgba(255,255,255,0.08);
+      color: #ccc;
+    }
+    .bibtex-code {
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #777;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* ── Authors ────────────────────────────────────── */
+    .authors-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      justify-content: center;
+    }
+    .author-chip {
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      font-size: 0.8rem;
+      color: #aaa;
+      transition: all 0.2s ease;
+    }
+    .author-chip:hover {
+      border-color: rgba(167, 139, 250, 0.3);
+      color: #ccc;
+    }
+    .author-chip.lead { border-color: rgba(167,139,250,0.2); color: #c4b5fd; }
+
+    /* ── Footer ─────────────────────────────────────── */
+    .footer {
+      padding: 3rem 2rem;
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .footer p {
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    /* ── Responsive ─────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .comparison-grid { grid-template-columns: 1fr; }
+      .multi-edit-grid { grid-template-columns: 1fr; }
+      .abstract-grid { grid-template-columns: 1fr; gap: 2rem; }
+    }
+    @media (max-width: 768px) {
+      .image-grid { grid-template-columns: 1fr 1fr; }
+      .navbar { display: none; }
+      .section { padding: 4rem 0; }
+      .multi-edit-grid { grid-template-columns: 1fr; }
+      .multi-edit-body { flex-direction: column; }
+      .multi-edit-inputs { grid-template-columns: repeat(2, 90px); }
+      .multi-edit-inputs.inputs-5col { grid-template-columns: repeat(5, 60px); }
+      .multi-edit-inputs.inputs-3col { grid-template-columns: repeat(3, 80px); }
+    }
+    @media (max-width: 480px) {
+      .image-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Figure Showcase ────────────────────────────── */
+    .figure-showcase {
+      margin-top: 2rem;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      transition: all 0.3s ease;
+    }
+    .figure-showcase:hover {
+      border-color: rgba(255,255,255,0.1);
+    }
+    .figure-showcase + .figure-showcase {
+      margin-top: 1.5rem;
+    }
+    .figure-showcase img {
+      width: 100%;
+      display: block;
+      cursor: zoom-in;
+    }
+    .figure-showcase .figure-caption {
+      padding: 1rem 1.5rem;
+      font-size: 0.85rem;
+      color: #777;
+      line-height: 1.5;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .figure-showcase .figure-caption strong {
+      color: #aaa;
+    }
+
+    /* ── Lightbox ───────────────────────────────────── */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.92);
+      backdrop-filter: blur(20px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 0 80px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #aaa;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* ── Glow effect for section headings ───────────── */
+    .glow-line {
+      width: 60px;
+      height: 3px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #7c3aed, #3b82f6);
+      margin-bottom: 2rem;
+    }
+
+    /* ── Scrollbar ──────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ Navbar ═══ -->
+<nav class="navbar" id="navbar">
+  <span class="nav-brand">MMCORE</span>
+  <a href="#hero" class="nav-link active">Home</a>
+  <a href="#about" class="nav-link">About</a>
+  <a href="#results" class="nav-link">Results</a>
+  <a href="#gallery" class="nav-link">Gallery</a>
+  <a href="#citation" class="nav-link">Citation</a>
+</nav>
+
+<!-- ═══ Hero ═══ -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge reveal">
+      <span class="dot"></span>
+      ByteDance Seed
+    </div>
+    <h1 class="reveal reveal-delay-1">
+      <span class="gradient-text">MMCORE</span>
+    </h1>
+    <p class="hero-subtitle reveal reveal-delay-2">
+      MultiModal COnnection with Representation Aligned Latent Embeddings — a unified framework for multimodal image generation and editing that bridges VLM reasoning with diffusion synthesis.
+    </p>
+    <div class="hero-actions reveal reveal-delay-3">
+      <a href="#" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Read Paper
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ About / Abstract ═══ -->
+<section class="section" id="about">
+  <div class="container">
+    <div class="abstract-grid">
+      <div>
+        <div class="glow-line reveal"></div>
+        <p class="section-label reveal">About the Project</p>
+        <h2 class="section-title reveal reveal-delay-1">Bridging Understanding<br/>and Generation</h2>
+        <p class="abstract-text reveal reveal-delay-2">
+          MMCORE leverages a pre-trained Vision-Language Model (VLM) to predict semantic visual embeddings via learnable query tokens, which serve as conditioning signals for a diffusion model. This streamlined design effectively transfers the rich understanding and reasoning capabilities of VLMs into the visual generation process, reducing computational overhead while maintaining high-fidelity synthesis.
+        </p>
+      </div>
+      <ul class="feature-list reveal reveal-delay-2">
+        <li class="feature-item">
+          <div class="feature-icon purple">&#9670;</div>
+          <div>
+            <h4>Dual-Pathway Conditioning</h4>
+            <p>Visual query tokens capture global semantics while text embeddings preserve fine-grained lexical details.</p>
+          </div>
+        </li>
+        <li class="feature-item">
+          <div class="feature-icon blue">&#9671;</div>
+          <div>
+            <h4>Semantic Visual Alignment</h4>
+            <p>Distillation from frozen ViT encoders provides stable supervision for learning robust visual tokens.</p>
+          </div>
+        </li>
+        <li class="feature-item">
+          <div class="feature-icon teal">&#9674;</div>
+          <div>
+            <h4>Efficient Training</h4>
+            <p>Minimal overhead through efficient alignment of pretrained models, avoiding costly end-to-end retraining.</p>
+          </div>
+        </li>
+        <li class="feature-item">
+          <div class="feature-icon pink">&#9673;</div>
+          <div>
+            <h4>Interleaved Generation</h4>
+            <p>Scales to 10+ input images with fine-grained localized control for complex multi-image editing.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Architecture ═══ -->
+<section class="section" id="architecture" style="padding-top: 0;">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">Architecture</p>
+      <h2 class="section-title">How MMCORE Works</h2>
+      <p class="section-desc">Multimodal information from a VLM is compressed into learned visual latent embeddings, which condition a diffusion-based image generator.</p>
+    </div>
+    <div class="arch-image-wrap reveal reveal-delay-1">
+      <img src="figures/architecture.png" alt="MMCORE Architecture" />
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ Benchmark Results ═══ -->
+<section class="section" id="results">
+  <div class="container">
+    <div class="reveal">
+      <div class="glow-line"></div>
+      <p class="section-label">Benchmarks</p>
+      <h2 class="section-title">Consistent Improvement over Seedream 4.0</h2>
+      <p class="section-desc">DreamBench AutoEval results across text-to-image generation, image editing alignment, and editing consistency.</p>
+    </div>
+    <div class="charts-grid">
+      <!-- Chart 1: T2I Alignment -->
+      <div class="chart-card reveal reveal-delay-1" data-chart>
+        <h3>Text-to-Image Alignment</h3>
+        <p class="chart-subtitle">Average accuracy (%) &uarr;</p>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">MMCORE</span>
+            <div class="bar-track"><div class="bar-fill ours" style="--target-width: 94%"><span>84.4</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">GPT-Image-1</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 90%"><span>80.7</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Seedream 4.0</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 87%"><span>78.2</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Gemini 2.5</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 77%"><span>69.2</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Qwen Image</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 66%"><span>59.1</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Flux Kontext</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 64%"><span>57.7</span></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Chart 2: Editing Alignment -->
+      <div class="chart-card reveal reveal-delay-2" data-chart>
+        <h3>Image Editing Alignment</h3>
+        <p class="chart-subtitle">Average accuracy (%) &uarr;</p>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">MMCORE</span>
+            <div class="bar-track"><div class="bar-fill ours" style="--target-width: 93%"><span>81.2</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">GPT-Image-1</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 91%"><span>79.9</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Seedream 4.0</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 91%"><span>79.6</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Gemini 2.5</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 87%"><span>75.8</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Flux Kontext</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 67%"><span>58.7</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Qwen Image</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 61%"><span>53.4</span></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Chart 3: Editing Consistency -->
+      <div class="chart-card reveal reveal-delay-3" data-chart>
+        <h3>Editing Consistency</h3>
+        <p class="chart-subtitle">Average accuracy (%) &uarr;</p>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">MMCORE</span>
+            <div class="bar-track"><div class="bar-fill ours" style="--target-width: 93%"><span>70.6</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Seedream 4.0</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 91%"><span>68.9</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Gemini 2.5</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 90%"><span>68.0</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Flux Kontext</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 73%"><span>54.8</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Qwen Image</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 63%"><span>47.9</span></div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">GPT-Image-1</span>
+            <div class="bar-track"><div class="bar-fill other" style="--target-width: 56%"><span>42.4</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ Gallery ═══ -->
+<section class="section" id="gallery">
+  <div class="container-wide">
+    <div class="reveal">
+      <div class="glow-line"></div>
+      <p class="section-label">Gallery</p>
+      <h2 class="section-title">Visual Results</h2>
+      <p class="section-desc">Curated samples showcasing text-to-image generation, single-image editing, and multi-image composition.</p>
+    </div>
+
+    <div class="gallery-tabs reveal reveal-delay-1" style="margin-top: 2rem;">
+      <button class="gallery-tab active" data-tab="t2i">Text-to-Image</button>
+      <button class="gallery-tab" data-tab="editing">Image Editing</button>
+      <button class="gallery-tab" data-tab="multi">Multi-Image Editing</button>
+    </div>
+
+    <!-- ── Tab: Text-to-Image ── -->
+    <div class="gallery-panel active" id="tab-t2i">
+      <div class="image-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="image-card reveal">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/desert_walker.jpeg" alt="Desert walker" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">An endless sea of sand stretches to the horizon. A robed figure walks atop the dune ridge, footprints trailing behind, sand kicked up by the wind.</p>
+        </div>
+        <div class="image-card reveal reveal-delay-1">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/wrathful_deity.jpeg" alt="Wrathful deity colossus engulfed in flames" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">Wrathful deity colossus standing amid raging flames. Glowing vajra, chains, and prayer flags. 8K ultra-clear, PBR materials, cinematic lighting, dark mythology aesthetic.</p>
+        </div>
+        <div class="image-card reveal">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/village_terraces.jpeg" alt="Chinese village with terraced fields" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">Green mountains, layered terraces, white-walled houses with dark roof tiles, wisps of cooking smoke, stone paths, murmuring streams, morning mist.</p>
+        </div>
+        <div class="image-card reveal reveal-delay-1">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/enchanted_forest.jpeg" alt="Enchanted forest with moss and ferns" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">Lush green canopy, sunlight filtering through, moss-covered branches, hanging vines, morning mist, crystal-clear stream, ferns, mushroom clusters, firefly glow.</p>
+        </div>
+        <div class="image-card reveal">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/whirlpool_vortex.jpeg" alt="Abyssal whirlpool vortex" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">Abyssal vortex: a deep spiral water wall devouring ships, anti-gravity waterfalls flowing upward. 8K detail, cinematic lighting.</p>
+        </div>
+        <div class="image-card reveal reveal-delay-1">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/hongkong_neon.jpeg" alt="Hong Kong neon night street" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">Night scene of Hong Kong's Mong Kok district. Dense neon signboards in vivid colors, deep street perspective, cinematic realism.</p>
+        </div>
+        <div class="image-card reveal">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/fairytale_street.jpeg" alt="Fairytale cobblestone street" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">A fairytale cobblestone street with warm-toned houses, climbing vines on brick walls, blue sky, a cat lounging, and a bicycle leaning nearby.</p>
+        </div>
+        <div class="image-card reveal reveal-delay-1">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/flower_bus.jpeg" alt="Flower-covered double-decker bus" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">Orange double-decker bus covered in dense pink flowers, number 10 clearly visible. Butterflies, flying petals, ultra-HD 8K 3D rendering.</p>
+        </div>
+        <div class="image-card reveal">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/sunset_dock.jpeg" alt="Girl on dock at sunset – impasto painting" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">An impasto emotional illustration at dusk — a girl in a white dress sits on a lake dock, her hair blown by the breeze, golden light reflecting off the water.</p>
+        </div>
+        <div class="image-card reveal reveal-delay-1">
+          <div class="image-wrap" style="aspect-ratio:16/9;"><img src="assets/t2i/meteorite_impact.jpeg" alt="Meteorite impact apocalypse" onclick="openLightbox(this.src)" /></div>
+          <p class="image-prompt">Meteorite impact, 8K ultra-clear. Lava eruption, shockwave expansion, earth crust cracking, city collapse, tsunami surge, cinematic catastrophe.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Image Editing ── -->
+    <div class="gallery-panel" id="tab-editing">
+      <div class="comparison-grid">
+
+        <!-- 1. Evening Scene Change -->
+        <div class="comparison-item reveal">
+          <div class="edit-prompt-badge"><span class="edit-tag">Scene</span>Change the background to an evening scene</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/evening_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/evening_output.jpeg" alt="Evening scene output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+        <!-- 2. Background Swap (Pyramids) -->
+        <div class="comparison-item reveal reveal-delay-1">
+          <div class="edit-prompt-badge"><span class="edit-tag">Background</span>Change background to Egyptian pyramids, with the Sphinx on the left</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/pyramids_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/pyramids_output.jpeg" alt="Pyramids background output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+        <!-- 3. Chinese Painting Style -->
+        <div class="comparison-item reveal">
+          <div class="edit-prompt-badge"><span class="edit-tag">Style</span>Convert to traditional Chinese painting style</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/chinese_painting_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/chinese_painting_output.jpeg" alt="Chinese painting output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+        <!-- 4. Attribute Editing (Shiba) -->
+        <div class="comparison-item reveal reveal-delay-1">
+          <div class="edit-prompt-badge"><span class="edit-tag">Attribute</span>Change the Shiba Inu's fur color to black</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/shiba_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/shiba_output.jpeg" alt="Black Shiba output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+        <!-- 5. Object Addition (Swan) -->
+        <div class="comparison-item reveal">
+          <div class="edit-prompt-badge"><span class="edit-tag">Add</span>A white swan swimming on the lake, with its reflection visible in the water</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/swan_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/swan_output.jpeg" alt="Swan added output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+        <!-- 6. Material / Color Change (Bronze) -->
+        <div class="comparison-item reveal reveal-delay-1">
+          <div class="edit-prompt-badge"><span class="edit-tag">Material</span>Make the surface of the bronze vessel colorful</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/bronze_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/bronze_output.jpeg" alt="Colorful bronze output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+        <!-- 7. Background Replacement (Kitchen) -->
+        <div class="comparison-item reveal">
+          <div class="edit-prompt-badge"><span class="edit-tag">Background</span>Replace the background with a naturally-lit kitchen, placing the coffee pot on a real wooden countertop</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/kitchen_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/kitchen_output.jpeg" alt="Kitchen background output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+        <!-- 8. Photo Restoration -->
+        <div class="comparison-item reveal reveal-delay-1">
+          <div class="edit-prompt-badge"><span class="edit-tag">Restore</span>Repair the cracks in this photo</div>
+          <div class="comparison-slider" data-slider>
+            <img class="img-overlay" src="assets/edit/restore_input.jpeg" alt="Input" />
+            <img class="img-base" src="assets/edit/restore_output.jpeg" alt="Restored photo output" />
+            <div class="slider-line"></div>
+            <div class="slider-handle"></div>
+            <div class="slider-labels"><span>Input</span><span>Edited</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tab: Multi-Image Editing ── -->
+    <div class="gallery-panel" id="tab-multi">
+      <div class="multi-edit-grid">
+
+        <!-- 1. 10-Input Composite Scene (full width) -->
+        <div class="multi-edit-card full-width reveal">
+          <div class="edit-prompt-badge"><span class="edit-tag">Compose</span>Pic 1 person sits in Pic 2 pose on a chair in the Pic 3 scene, wearing Pic 4 top and Pic 5 skirt with Pic 6 shoes; Pic 7 fox curls on her lap; wall covered in Pic 8 flowers, Pic 9 TV on the table; rendered in Pic 10 art style</div>
+          <div class="multi-edit-body">
+            <div class="multi-edit-inputs inputs-5col">
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in1.jpeg" alt="Person" loading="lazy" /><span class="input-thumb-label">Pic 1</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in2.jpeg" alt="Pose" loading="lazy" /><span class="input-thumb-label">Pic 2</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in3.jpeg" alt="Scene" loading="lazy" /><span class="input-thumb-label">Pic 3</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in4.jpeg" alt="Top" loading="lazy" /><span class="input-thumb-label">Pic 4</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in5.jpeg" alt="Skirt" loading="lazy" /><span class="input-thumb-label">Pic 5</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in6.jpeg" alt="Shoes" loading="lazy" /><span class="input-thumb-label">Pic 6</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in7.jpeg" alt="Fox" loading="lazy" /><span class="input-thumb-label">Pic 7</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in8.jpeg" alt="Flowers" loading="lazy" /><span class="input-thumb-label">Pic 8</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in9.jpeg" alt="TV" loading="lazy" /><span class="input-thumb-label">Pic 9</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/composite_in10.jpeg" alt="Art style" loading="lazy" /><span class="input-thumb-label">Pic 10</span></div>
+            </div>
+            <div class="multi-edit-arrow">→</div>
+            <div class="multi-edit-output"><img src="assets/multi_edit/composite_out.jpeg" alt="Composite scene" loading="lazy" onclick="openLightbox(this.src)" /></div>
+          </div>
+        </div>
+
+        <!-- 2. 4-Input Mythical Chimera Creature -->
+        <div class="multi-edit-card reveal reveal-delay-1">
+          <div class="edit-prompt-badge"><span class="edit-tag">Fuse</span>Combine the deer antlers from Pic 1, the cat head and body from Pic 2, the eagle wings from Pic 3, and the whale tail from Pic 4 to create a brand-new mythical creature</div>
+          <div class="multi-edit-body">
+            <div class="multi-edit-inputs">
+              <div class="input-thumb"><img src="assets/multi_edit/chimera_in1.jpeg" alt="Deer with antlers" loading="lazy" /><span class="input-thumb-label">Pic 1</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/chimera_in2.jpeg" alt="Orange kitten" loading="lazy" /><span class="input-thumb-label">Pic 2</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/chimera_in3.jpeg" alt="Eagle" loading="lazy" /><span class="input-thumb-label">Pic 3</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/chimera_in4.jpeg" alt="Cosmic whale" loading="lazy" /><span class="input-thumb-label">Pic 4</span></div>
+            </div>
+            <div class="multi-edit-arrow">→</div>
+            <div class="multi-edit-output"><img src="assets/multi_edit/chimera_out.jpeg" alt="Mythical chimera creature" loading="lazy" onclick="openLightbox(this.src)" /></div>
+          </div>
+        </div>
+
+        <!-- 3. 10-Input Ice Field Gathering (full width) -->
+        <div class="multi-edit-card full-width reveal">
+          <div class="edit-prompt-badge"><span class="edit-tag">Compose</span>Place all people and animals from Pics 1–9 beside the polar bear on the Pic 10 ice field</div>
+          <div class="multi-edit-body">
+            <div class="multi-edit-inputs inputs-5col">
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in1.jpeg" alt="Subject 1" loading="lazy" /><span class="input-thumb-label">Pic 1</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in2.jpeg" alt="Subject 2" loading="lazy" /><span class="input-thumb-label">Pic 2</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in3.jpeg" alt="Subject 3" loading="lazy" /><span class="input-thumb-label">Pic 3</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in4.jpeg" alt="Subject 4" loading="lazy" /><span class="input-thumb-label">Pic 4</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in5.jpeg" alt="Subject 5" loading="lazy" /><span class="input-thumb-label">Pic 5</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in6.jpeg" alt="Subject 6" loading="lazy" /><span class="input-thumb-label">Pic 6</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in7.jpeg" alt="Subject 7" loading="lazy" /><span class="input-thumb-label">Pic 7</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in8.jpeg" alt="Subject 8" loading="lazy" /><span class="input-thumb-label">Pic 8</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in9.jpeg" alt="Subject 9" loading="lazy" /><span class="input-thumb-label">Pic 9</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/icefield_in10.jpeg" alt="Ice field" loading="lazy" /><span class="input-thumb-label">Pic 10</span></div>
+            </div>
+            <div class="multi-edit-arrow">→</div>
+            <div class="multi-edit-output"><img src="assets/multi_edit/icefield_out.jpeg" alt="Ice field gathering" loading="lazy" onclick="openLightbox(this.src)" /></div>
+          </div>
+        </div>
+
+        <!-- 4. 5-Input Creature Assembly (full width) -->
+        <div class="multi-edit-card full-width reveal reveal-delay-1">
+          <div class="edit-prompt-badge"><span class="edit-tag">Fusion</span>Assemble all five body parts — head, wings, antennae, legs, and tail — into one complete fantastical insect creature</div>
+          <div class="multi-edit-body">
+            <div class="multi-edit-inputs inputs-3col">
+              <div class="input-thumb"><img src="assets/multi_edit/insect_in1.jpeg" alt="Head" loading="lazy" /><span class="input-thumb-label">Head</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/insect_in2.jpeg" alt="Wings" loading="lazy" /><span class="input-thumb-label">Wings</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/insect_in3.jpeg" alt="Antennae" loading="lazy" /><span class="input-thumb-label">Antennae</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/insect_in4.jpeg" alt="Legs" loading="lazy" /><span class="input-thumb-label">Legs</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/insect_in5.jpeg" alt="Tail" loading="lazy" /><span class="input-thumb-label">Tail</span></div>
+            </div>
+            <div class="multi-edit-arrow">→</div>
+            <div class="multi-edit-output"><img src="assets/multi_edit/insect_out.jpeg" alt="Fantasy insect" loading="lazy" onclick="openLightbox(this.src)" /></div>
+          </div>
+        </div>
+
+        <!-- 5. 4-Input Savanna Scene -->
+        <div class="multi-edit-card reveal">
+          <div class="edit-prompt-badge"><span class="edit-tag">Compose</span>Place giraffe (Pic 2) eating leaves, wildebeest (Pic 3) and zebra (Pic 4) running toward the mountains in the Pic 1 savanna</div>
+          <div class="multi-edit-body">
+            <div class="multi-edit-inputs">
+              <div class="input-thumb"><img src="assets/multi_edit/savanna_in1.jpeg" alt="Savanna" loading="lazy" /><span class="input-thumb-label">Pic 1</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/savanna_in2.jpeg" alt="Giraffe" loading="lazy" /><span class="input-thumb-label">Pic 2</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/savanna_in3.jpeg" alt="Wildebeest" loading="lazy" /><span class="input-thumb-label">Pic 3</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/savanna_in4.jpeg" alt="Zebra" loading="lazy" /><span class="input-thumb-label">Pic 4</span></div>
+            </div>
+            <div class="multi-edit-arrow">→</div>
+            <div class="multi-edit-output"><img src="assets/multi_edit/savanna_out.jpeg" alt="Savanna scene" loading="lazy" onclick="openLightbox(this.src)" /></div>
+          </div>
+        </div>
+
+        <!-- 6. 4-Input Magazine Cover -->
+        <div class="multi-edit-card reveal reveal-delay-1">
+          <div class="edit-prompt-badge"><span class="edit-tag">Design</span>Food magazine cover: pour Pic 1 drink into the Pic 2 glass, garnished with Pic 3 mint and Pic 4 ice cubes</div>
+          <div class="multi-edit-body">
+            <div class="multi-edit-inputs">
+              <div class="input-thumb"><img src="assets/multi_edit/magazine_in1.jpeg" alt="Drink" loading="lazy" /><span class="input-thumb-label">Pic 1</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/magazine_in2.jpeg" alt="Glass" loading="lazy" /><span class="input-thumb-label">Pic 2</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/magazine_in3.jpeg" alt="Mint" loading="lazy" /><span class="input-thumb-label">Pic 3</span></div>
+              <div class="input-thumb"><img src="assets/multi_edit/magazine_in4.jpeg" alt="Ice" loading="lazy" /><span class="input-thumb-label">Pic 4</span></div>
+            </div>
+            <div class="multi-edit-arrow">→</div>
+            <div class="multi-edit-output"><img src="assets/multi_edit/magazine_out.jpeg" alt="Magazine cover" loading="lazy" onclick="openLightbox(this.src)" /></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ Authors ═══ -->
+<section class="section" id="authors" style="padding: 5rem 0;">
+  <div class="container" style="text-align:center;">
+    <p class="section-label reveal">Team</p>
+    <h2 class="section-title reveal reveal-delay-1" style="margin-bottom: 0.5rem;">Authors</h2>
+    <p class="section-desc reveal reveal-delay-2" style="margin: 0 auto 2rem; text-align: center;">ByteDance Seed</p>
+    <div class="authors-list reveal reveal-delay-3">
+      <span class="author-chip">Zijie Li*</span>
+      <span class="author-chip">Yichun Shi*</span>
+      <span class="author-chip">Jingxiang Sun*</span>
+      <span class="author-chip">Ye Wang</span>
+      <span class="author-chip">Yixuan Huang</span>
+      <span class="author-chip">Zhiyao Guo</span>
+      <span class="author-chip">Xiaochen Lian</span>
+      <span class="author-chip">Peihao Zhu</span>
+      <span class="author-chip">Yu Tian</span>
+      <span class="author-chip">Zhonghua Zhai&dagger;</span>
+      <span class="author-chip">Peng Wang*&dagger;</span>
+    </div>
+    <p class="reveal reveal-delay-4" style="font-size: 0.75rem; color: #555; margin-top: 1rem;">* Equal Contribution &nbsp;&middot;&nbsp; &dagger; Project Lead</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ Citation ═══ -->
+<section class="section" id="citation">
+  <div class="container">
+    <div class="reveal">
+      <div class="glow-line"></div>
+      <p class="section-label">Citation</p>
+      <h2 class="section-title">BibTeX</h2>
+    </div>
+    <div class="bibtex-wrap reveal reveal-delay-1">
+      <div class="bibtex-header">
+        <span>BibTeX</span>
+        <button class="bibtex-copy" onclick="copyBibtex()">Copy</button>
+      </div>
+      <div class="bibtex-code" id="bibtex-content">@article{li2026mmcore,
+  title   = {MMCORE: MultiModal COnnection with Representation Aligned Latent Embeddings},
+  author  = {Li, Zijie and Shi, Yichun and Sun, Jingxiang and Wang, Ye and Huang, Yixuan and Guo, Zhiyao and Lian, Xiaochen and Zhu, Peihao and Tian, Yu and Zhai, Zhonghua and Wang, Peng},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Footer ═══ -->
+<footer class="footer">
+  <p>MMCORE &middot; ByteDance Seed &middot; 2026</p>
+</footer>
+
+<!-- ═══ Lightbox ═══ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightbox-img" src="" alt="" />
+</div>
+
+<script>
+/* ── Scroll Reveal ────────────────────────────────── */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+/* ── Navbar scroll state ──────────────────────────── */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 100);
+});
+
+/* ── Active nav link ──────────────────────────────── */
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const top = section.offsetTop - 200;
+    if (window.scrollY >= top) current = section.getAttribute('id');
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+/* ── Animated Counters ────────────────────────────── */
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = parseFloat(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      const prefix = el.dataset.prefix || '';
+      let current = 0;
+      const step = target / 60;
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        el.textContent = prefix + current.toFixed(1) + suffix;
+      }, 16);
+      counterObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('.stat-value[data-target]').forEach(el => counterObserver.observe(el));
+
+/* ── Bar Chart Animation ──────────────────────────── */
+const chartObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const fills = entry.target.querySelectorAll('.bar-fill');
+      fills.forEach((fill, i) => {
+        setTimeout(() => fill.classList.add('animated'), i * 80);
+      });
+      chartObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('[data-chart]').forEach(el => chartObserver.observe(el));
+
+/* ── Gallery Tabs ─────────────────────────────────── */
+document.querySelectorAll('.gallery-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.gallery-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── Comparison Slider ────────────────────────────── */
+document.querySelectorAll('[data-slider]').forEach(slider => {
+  let isDown = false;
+
+  function updateSlider(x) {
+    const rect = slider.getBoundingClientRect();
+    let pct = ((x - rect.left) / rect.width) * 100;
+    pct = Math.max(0, Math.min(100, pct));
+
+    const overlay = slider.querySelector('.img-overlay');
+    const line = slider.querySelector('.slider-line');
+    const handle = slider.querySelector('.slider-handle');
+
+    overlay.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    line.style.left = pct + '%';
+    handle.style.left = pct + '%';
+  }
+
+  slider.addEventListener('mousedown', (e) => { isDown = true; updateSlider(e.clientX); });
+  slider.addEventListener('touchstart', (e) => { isDown = true; updateSlider(e.touches[0].clientX); });
+  window.addEventListener('mousemove', (e) => { if (isDown) updateSlider(e.clientX); });
+  window.addEventListener('touchmove', (e) => { if (isDown) updateSlider(e.touches[0].clientX); });
+  window.addEventListener('mouseup', () => { isDown = false; });
+  window.addEventListener('touchend', () => { isDown = false; });
+});
+
+/* ── Copy BibTeX ──────────────────────────────────── */
+function copyBibtex() {
+  const text = document.getElementById('bibtex-content').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.bibtex-copy');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+
+/* ── Lightbox ─────────────────────────────────────── */
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('lightbox').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
+document.querySelectorAll('.input-thumb img').forEach(img => {
+  img.addEventListener('click', () => openLightbox(img.src));
+});
+
+/* ── Click-to-zoom for image cards ────────────────── */
+document.querySelectorAll('.image-card img').forEach(img => {
+  img.style.cursor = 'zoom-in';
+  img.addEventListener('click', () => openLightbox(img.src));
+});
+</script>
+
+</body>
+</html>

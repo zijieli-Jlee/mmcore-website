@@ -1,0 +1,18 @@
+# Large directories not used by the website
+aesthetic_figures/
+/edit/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PDFs and source files in figures/ (only PNGs/JPEGs are used by the site)
+figures/*.pdf
+figures/*.pptx
+
+# Editor
+.vscode/
+.idea/
+
+# Preview PDF
+mmcore_preview.pdf
