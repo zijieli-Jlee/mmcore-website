@@ -321,13 +321,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
       flex-shrink: 0;
     }
-    .feature-icon.purple { background: rgba(167, 139, 250, 0.15); }
-    .feature-icon.blue { background: rgba(59, 130, 246, 0.15); }
-    .feature-icon.teal { background: rgba(45, 212, 191, 0.15); }
-    .feature-icon.pink { background: rgba(244, 114, 182, 0.15); }
+    .feature-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .feature-icon.purple { background: rgba(167, 139, 250, 0.15); color: #a78bfa; }
+    .feature-icon.blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .feature-icon.teal { background: rgba(45, 212, 191, 0.15); color: #2dd4bf; }
+    .feature-icon.pink { background: rgba(244, 114, 182, 0.15); color: #f472b6; }
     .feature-item h4 {
       font-size: 0.95rem;
       font-weight: 600;
@@ -983,28 +986,28 @@
       </div>
       <ul class="feature-list reveal reveal-delay-2">
         <li class="feature-item">
-          <div class="feature-icon purple">&#9670;</div>
+          <div class="feature-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></div>
           <div>
             <h4>Dual-Pathway Conditioning</h4>
             <p>Visual query tokens capture global semantics while text embeddings preserve fine-grained lexical details.</p>
           </div>
         </li>
         <li class="feature-item">
-          <div class="feature-icon blue">&#9671;</div>
+          <div class="feature-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/><path d="M2 12h20"/></svg></div>
           <div>
             <h4>Semantic Visual Alignment</h4>
             <p>Distillation from frozen ViT encoders provides stable supervision for learning robust visual tokens.</p>
           </div>
         </li>
         <li class="feature-item">
-          <div class="feature-icon teal">&#9674;</div>
+          <div class="feature-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
           <div>
             <h4>Efficient Training</h4>
             <p>Minimal overhead through efficient alignment of pretrained models, avoiding costly end-to-end retraining.</p>
           </div>
         </li>
         <li class="feature-item">
-          <div class="feature-icon pink">&#9673;</div>
+          <div class="feature-icon pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/></svg></div>
           <div>
             <h4>Interleaved Generation</h4>
             <p>Scales to 10+ input images with fine-grained localized control for complex multi-image editing.</p>
