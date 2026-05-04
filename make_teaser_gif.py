@@ -41,11 +41,21 @@ def get_font(size):
         return ImageFont.load_default()
 
 
+def draw_arrow(draw, x, y, size=12, color=ACCENT):
+    """Draw a right-pointing arrow at (x, y) center."""
+    # Horizontal line
+    draw.line([(x - size, y), (x + size - 4, y)], fill=color, width=2)
+    # Arrowhead
+    draw.polygon([
+        (x + size, y),
+        (x + size - 7, y - 5),
+        (x + size - 7, y + 5),
+    ], fill=color)
+
+
 def add_label_bar(frame, category, description):
     draw = ImageDraw.Draw(frame)
-    # Dark label bar at top
     draw.rectangle([(0, 0), (CANVAS_W, 70)], fill=LABEL_BG)
-    # Accent line
     draw.rectangle([(0, 70), (CANVAS_W, 72)], fill=(*ACCENT, 80))
 
     cat_font = get_font(13)
@@ -91,14 +101,13 @@ def create_title_frame():
 
 def create_t2i_frame(img_path, prompt_short):
     frame = make_bg()
-    add_label_bar(frame, "TEXT → IMAGE", f'"{prompt_short}"')
+    add_label_bar(frame, "TEXT-TO-IMAGE", f'"{prompt_short}"')
 
     img = load_and_fit(img_path, CANVAS_W - 80, CANVAS_H - 120)
     x = (CANVAS_W - img.width) // 2
     y = 80 + (CANVAS_H - 100 - img.height) // 2
     frame.paste(img, (x, y), img)
 
-    # Subtle border around image
     draw = ImageDraw.Draw(frame)
     draw.rectangle(
         [(x - 1, y - 1), (x + img.width, y + img.height)],
@@ -134,10 +143,9 @@ def create_edit_frame(input_path, output_path, label):
     draw.rectangle([(x2 - 1, y2 - 1), (x2 + out.width, y2 + out.height)], outline=(40, 40, 50), width=1)
 
     # Arrow in center
-    arrow_font = get_font(32)
     mid_x = CANVAS_W // 2
     mid_y = content_top + content_h // 2
-    draw.text((mid_x - 10, mid_y - 18), "→", fill=ACCENT, font=arrow_font)
+    draw_arrow(draw, mid_x, mid_y, size=16, color=ACCENT)
 
     # Labels
     label_font = get_font(12)
